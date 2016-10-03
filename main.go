@@ -106,8 +106,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("Matches:\n----------------------------\n")
-	fmt.Println("Line\tPattern\n--------------------------------------------")
+	fmt.Println("Pattern Match?\t\tString\n--------------------------------------------")
 
 	totalFullMatches := 0
 
@@ -115,6 +114,7 @@ func main() {
 	stackTail := new(Stack)
 
 	for _, line := range lines {
+
 		matches := regex.MatchString(line)
 		if *negate {
 			matches = !matches
@@ -124,7 +124,7 @@ func main() {
 
 			stackHead.Push(matches)
 
-		} else if stackHead.Len() == 1 {
+		} else {
 
 			// Check if the item to be pushed is the same as what's in the current head stack
 			// If so, then restet both stacks
@@ -144,7 +144,7 @@ func main() {
 			}
 		}
 
-		fmt.Printf("%v\t%v\n", matches, line)
+		fmt.Printf("%v\t\t%v\n", matches, line)
 
 	}
 

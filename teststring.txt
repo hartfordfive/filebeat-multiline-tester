@@ -10,7 +10,6 @@ connection <0.23893.109>, channel 3 - soft error:
 {amqp_error,not_found,
             "no queue 'bucket-1' in vhost '/'",
             'queue.declare'}
-
 =ERROR REPORT==== 3-Feb-2016::03:10:32 ===
 connection <0.23893.109>, channel 3 - soft error:
 {amqp_error,not_found,
@@ -19,25 +18,9 @@ connection <0.23893.109>, channel 3 - soft error:
 
 =ERROR REPORT==== 3-Feb-2016::03:10:32 ===
 connection <0.23893.109>, channel 3 - soft error:
-{amqp_error,not_found,
-            "no queue 'bucket-1' in vhost '/'",
-            'queue.declare'}
 =ERROR REPORT==== 3-Feb-2016::03:10:32 ===
 connection <0.23893.109>, channel 3 - soft error:
-{amqp_error,not_found,
-            "no queue 'bucket-1' in vhost '/'",
-            'queue.declare'}
-=ERROR REPORT==== 3-Feb-2016::03:10:32 ===
-connection <0.23893.109>, channel 3 - soft error:
-{amqp_error,not_found,
-            "no queue 'bucket-1' in vhost '/'",
-            'queue.declare'}
 
-=ERROR REPORT==== 3-Feb-2016::03:10:32 ===
-connection <0.23893.109>, channel 3 - soft error:
-{amqp_error,not_found,
-            "no queue 'bucket-1' in vhost '/'",
-            'queue.declare'}
 
 =ERROR REPORT==== 3-Feb-2016::03:10:32 ===
 connection <0.23893.109>, channel 3 - soft error:
