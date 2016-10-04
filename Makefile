@@ -2,7 +2,7 @@
 BASE_BINARY=filebeat-multiline-tester
 
 # These are the values we want to pass for Version and BuildTime
-VERSION=0.1.0
+VERSION := $(shell sh -c 'cat VERSION')
 BUILD_TIME=`date +%Y-%m-%d`
 GIT_HASH=`git rev-parse --verify HEAD`
 UNAME := $(shell uname)
