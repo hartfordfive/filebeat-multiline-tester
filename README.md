@@ -13,6 +13,7 @@ Run `make build` in the root of this application repository.
 - `-f` : File containing multi-line string to test (default: "")
 - `-n` : Negate the pattern matching (default: true)
 - `-p` : Multi-line regex pattern to use for the matching (default: "")
+- `-y` : Specify a filebeat prospector yaml config, which overrides the `-f`, `-n`, and `-p` flags (default: "")
 - `-v` : Prints current version and exits
 
 ## Example

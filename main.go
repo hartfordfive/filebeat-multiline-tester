@@ -1,13 +1,42 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
+
+	"gopkg.in/yaml.v2"
 )
+
+// ProspectorMultiLineConfig ...
+type ProspectorMultiLineConfig struct {
+	Pattern string `yaml:"pattern"`
+	Negate  bool   `yaml:"negate"`
+	Match   string `yaml:"match"`
+}
+
+// ProspectorConfig ...
+type ProspectorConfig struct {
+	Paths           []string                  `yaml:"paths"`
+	FieldsUnderRoot bool                      `yaml:"fields_under_root"`
+	IgnoreOlder     string                    `yaml:"ignore_older"`
+	Fields          map[string]string         `yaml:"fields"`
+	MultiLine       ProspectorMultiLineConfig `yaml:"multiline"`
+}
+
+// Prospectors ...
+type Prospectors struct {
+	Prospectors []ProspectorConfig `yaml:"prospectors"`
+}
+
+// FilebeatConfig ...
+type FilebeatConfig struct {
+	Filebeat Prospectors `yaml:"filebeat"`
+}
 
 // Stack ...
 type Stack struct {
@@ -65,6 +94,8 @@ func main() {
 	pattern := flag.String("p", "", "Multi-line regex pattern")
 	negate := flag.Bool("n", true, "Negate the pattern matching")
 	file := flag.String("f", "", "File containing multi-line string")
+	yamlConfig := flag.String("y", "", "Filebeat prospector yaml config file (overrides the pattern/negate options)")
+
 	flag.Parse()
 
 	fmt.Println("")
@@ -74,36 +105,39 @@ func main() {
 		os.Exit(0)
 	}
 
+	// Choose yaml config first if it was specified
+	if *yamlConfig != "" {
+		conf, err := loadYamlConfig(*yamlConfig)
+		if err != nil {
+			exitWithMessage("ERROR", fmt.Sprintf("Problem with yaml config: %s", err), true)
+		}
+		*pattern = conf.Filebeat.Prospectors[0].MultiLine.Pattern
+		*negate = conf.Filebeat.Prospectors[0].MultiLine.Negate
+		*file = conf.Filebeat.Prospectors[0].Paths[0]
+	}
+
 	if *file == "" {
-		fmt.Println("[ERROR] Must specify a file name!\n")
-		flag.PrintDefaults()
-		os.Exit(1)
+		exitWithMessage("ERROR", "Must specify a file name.", true)
+	}
+
+	if *pattern == "" {
+		exitWithMessage("ERROR", "Must specify a pattern.", true)
 	}
 
 	content, err := ioutil.ReadFile(*file)
 	if err != nil {
-		fmt.Println("[ERROR] Could not read file: ", err, "\n")
-		flag.PrintDefaults()
-		os.Exit(1)
-	}
-
-	if *pattern == "" {
-		fmt.Println("[ERROR] Must specify a pattern!\n")
-		flag.PrintDefaults()
-		os.Exit(1)
+		exitWithMessage("ERROR", fmt.Sprintf("Could not read file: %s", err), true)
 	}
 
 	regex, err := regexp.Compile(*pattern)
 	if err != nil {
-		fmt.Println("Failed to compile pattern: ", err, "\n")
-		os.Exit(1)
+		exitWithMessage("ERROR", fmt.Sprintf("Failed to compile pattern: %s", err), false)
 	}
 
 	lines := strings.Split(string(content), "\n")
 
 	if string(content) == "" {
-		fmt.Println("[WARNING] Sample string contents is empty!")
-		os.Exit(1)
+		exitWithMessage("WARNING", "Sample string contents is empty.", false)
 	}
 
 	fmt.Println("Pattern Match?\t\tString\n--------------------------------------------")
@@ -153,4 +187,40 @@ func main() {
 	fmt.Printf("Total Matches: %d\n", totalFullMatches)
 	fmt.Println("-------------------------")
 
+}
+
+// Parse is a function that unmarshals the specified yaml config file
+func (c *FilebeatConfig) Parse(data []byte) error {
+	if err := yaml.Unmarshal(data, c); err != nil {
+		return err
+	}
+
+	if len(c.Filebeat.Prospectors) == 0 {
+		return errors.New("Must have at least one prospector config!")
+	}
+
+	return nil
+}
+
+func loadYamlConfig(filname string) (*FilebeatConfig, error) {
+
+	content, err := ioutil.ReadFile(filname)
+	if err != nil {
+		return nil, err
+	}
+
+	var config FilebeatConfig
+	if err := config.Parse(content); err != nil {
+		return nil, err
+	}
+
+	return &config, nil
+}
+
+func exitWithMessage(level string, msg string, showUsage bool) {
+	fmt.Printf("[%s] %s\n", level, msg)
+	if showUsage {
+		flag.PrintDefaults()
+	}
+	os.Exit(1)
 }

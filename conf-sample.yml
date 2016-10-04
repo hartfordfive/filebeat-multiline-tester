@@ -1,0 +1,15 @@
+--- 
+filebeat: 
+  prospectors: 
+    - 
+      fields: 
+        category: general
+        type: elasticsearch
+      fields_under_root: true
+      ignore_older: 24h
+      multiline: 
+        match: after
+        negate: true
+        pattern: "^\\[[0-9]{4}-[0-9]{2}-[0-9]{2}"
+      paths: 
+        - teststring-es.txt
