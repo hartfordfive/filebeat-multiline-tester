@@ -1,3 +1,5 @@
 multiline-test
 bin/
-*.local.txt
+**.local
+**.local.*
+filebeat-multiline-tester

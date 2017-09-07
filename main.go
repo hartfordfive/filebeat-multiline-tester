@@ -1,7 +1,7 @@
 package main
 
 import (
-	"errors"
+	//"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -9,93 +9,36 @@ import (
 	"regexp"
 	"strings"
 
-	"gopkg.in/yaml.v2"
+	"github.com/elastic/beats/libbeat/common/match"
+	//"gopkg.in/yaml.v2"
 )
 
-// ProspectorMultiLineConfig ...
-type ProspectorMultiLineConfig struct {
-	Pattern string `yaml:"pattern"`
-	Negate  bool   `yaml:"negate"`
-	Match   string `yaml:"match"`
-}
-
-// ProspectorConfig ...
-type ProspectorConfig struct {
-	Paths           []string                  `yaml:"paths"`
-	FieldsUnderRoot bool                      `yaml:"fields_under_root"`
-	IgnoreOlder     string                    `yaml:"ignore_older"`
-	Fields          map[string]string         `yaml:"fields"`
-	MultiLine       ProspectorMultiLineConfig `yaml:"multiline"`
-}
-
-// Prospectors ...
-type Prospectors struct {
-	Prospectors []ProspectorConfig `yaml:"prospectors"`
-}
-
-// FilebeatConfig ...
-type FilebeatConfig struct {
-	Filebeat Prospectors `yaml:"filebeat"`
-}
-
-// Stack ...
-type Stack struct {
-	top  *Element
-	size int
-}
-
-// Element ...
-type Element struct {
-	value interface{} // All types satisfy the empty interface, so we can store anything here.
-	next  *Element
-}
-
-// Len function returns the stack's length
-func (s *Stack) Len() int {
-	return s.size
-}
-
-// Push function a new element onto the stack
-func (s *Stack) Push(value interface{}) {
-	s.top = &Element{value, s.top}
-	s.size++
-}
-
-// Pop function removes the top element from the stack and return it's value or nil if the stack is empty
-func (s *Stack) Pop() (value interface{}) {
-	if s.size > 0 {
-		value, s.top = s.top.value, s.top.next
-		s.size--
-		return
-	}
-	return nil
-}
-
-// Peek function returns the top element value from the stack without modifying the stack
-func (s *Stack) Peek() (value interface{}) {
-	return s.top.value
-}
-
-// Reset function resets the stack by setting the size to 0 and the top element to nil
-func (s *Stack) Reset() {
-	s.top = nil
-	s.size = 0
-}
-
 var (
-	buildDate  string
-	version    string
-	commitHash string
+	buildDate       string
+	version         string
+	commitHash      string
+	totalMinMatches int
+	stackHead       *Stack
+	stackTail       *Stack
+	matcherTypes    map[int]string
+	showMatches     *bool
 )
 
 func main() {
 
+	matcherTypes = map[int]string{
+		1: "regexp.CompilePosix",
+		2: "regexp.Compile",
+		3: "match.Matcher",
+	}
+
 	v := flag.Bool("v", false, "prints current version and exits")
+	matcherType := flag.Int("t", 0, "Pattern backend type: 1=regexp.CompilePosix, 2=regexp.Compile, 3=match.Matcher")
 	pattern := flag.String("p", "", "Multi-line regex pattern")
 	negate := flag.Bool("n", true, "Negate the pattern matching")
 	file := flag.String("f", "", "File containing multi-line string")
+	showMatches = flag.Bool("s", false, "Print individual lines and their matching status")
 	yamlConfig := flag.String("y", "", "Filebeat prospector yaml config file (overrides the pattern/negate options)")
-
 	flag.Parse()
 
 	fmt.Println("")
@@ -124,82 +67,141 @@ func main() {
 		exitWithMessage("ERROR", "Must specify a pattern.", true)
 	}
 
-	content, err := ioutil.ReadFile(*file)
+	if *matcherType < 1 || *matcherType > 3 {
+		exitWithMessage("ERROR", "Pattern type must be a value from 1 to 3", true)
+	}
+
+	fileContent, err := ioutil.ReadFile(*file)
 	if err != nil {
 		exitWithMessage("ERROR", fmt.Sprintf("Could not read file: %s", err), true)
 	}
+	content := strings.TrimSpace(string(fileContent))
 
-	regex, err := regexp.Compile(*pattern)
-	if err != nil {
-		exitWithMessage("ERROR", fmt.Sprintf("Failed to compile pattern: %s", err), false)
-	}
-
-	lines := strings.Split(string(content), "\n")
-
-	if string(content) == "" {
+	if content == "" {
 		exitWithMessage("WARNING", "Sample string contents is empty.", false)
 	}
 
-	fmt.Println("Pattern Match?\t\tString\n--------------------------------------------")
+	stackHead = new(Stack)
+	stackTail = new(Stack)
 
-	totalFullMatches := 0
+	line(70)
+	fmt.Println(center("Filebeat multiline tester", 70, " "))
+	line(70)
+	fmt.Printf("Using matching backend: %s\n", matcherTypes[*matcherType])
+	line(70)
 
-	stackHead := new(Stack)
-	stackTail := new(Stack)
-
-	for _, line := range lines {
-
-		matches := regex.MatchString(line)
-		if *negate {
-			matches = !matches
-		}
-
-		if stackHead.Len() == 0 {
-
-			stackHead.Push(matches)
-
-		} else {
-
-			// Check if the item to be pushed is the same as what's in the current head stack
-			// If so, then restet both stacks
-			if matches == stackHead.Peek().(bool) {
-
-				// If the tail stack has one or more items, count this as a match before reseting both stacks
-				if stackTail.Len() >= 1 {
-					totalFullMatches += 1
-				}
-				stackHead.Reset()
-				stackHead.Push(matches)
-				stackTail.Reset()
-
-			} else {
-				// Otherwise, push the match result onto the tail stack
-				stackTail.Push(matches)
-			}
-		}
-
-		fmt.Printf("%v\t\t%v\n", matches, line)
-
+	switch *matcherType {
+	case 1, 2:
+		MatchOnRegexpCompile(*pattern, *negate, *matcherType, content)
+	case 3:
+		MatchOnMatchMatcher(*pattern, *negate, content)
 	}
 
-	fmt.Println("")
-	fmt.Println("-------------------------")
-	fmt.Printf("Total Matches: %d\n", totalFullMatches)
-	fmt.Println("-------------------------")
+	if *showMatches {
+		line(70)
+	}
+	fmt.Printf("Matches Found: %d\n", totalMinMatches)
+	line(70)
 
 }
 
-// Parse is a function that unmarshals the specified yaml config file
-func (c *FilebeatConfig) Parse(data []byte) error {
-	if err := yaml.Unmarshal(data, c); err != nil {
-		return err
+func MatchOnRegexpCompile(pattern string, negate bool, matcherType int, content string) {
+
+	var regex *regexp.Regexp
+	var err error
+	if matcherType == 1 {
+		regex, err = regexp.CompilePOSIX(pattern)
+		if err != nil {
+			exitWithMessage("ERROR", fmt.Sprintf("Failed to compile pattern: %s", err), false)
+		}
+	} else {
+		regex, err = regexp.Compile(pattern)
+		if err != nil {
+			exitWithMessage("ERROR", fmt.Sprintf("Failed to compile pattern: %s", err), false)
+		}
 	}
 
-	if len(c.Filebeat.Prospectors) == 0 {
-		return errors.New("Must have at least one prospector config!")
+	lines := strings.Split(content, "\n")
+
+	if *showMatches {
+		fmt.Printf("%s| %s\n", center("Match?", 10, " "), leftjust("Text", 40, " "))
+		fmt.Println(strings.Repeat("-", 60))
 	}
 
-	return nil
+	for _, line := range lines {
+
+		isMatch := regex.MatchString(line)
+		if negate {
+			isMatch = !isMatch
+		}
+
+		if stackHead.Len() == 0 {
+			stackHead.Push(isMatch)
+			totalMinMatches++
+		} else {
+			// Check if the item to be pushed is the same as what's in the current head stack
+			// If so, then restet both stacks
+			if isMatch == stackHead.Peek().(bool) {
+				totalMinMatches++
+				stackHead.Reset()
+				stackHead.Push(isMatch)
+				stackTail.Reset()
+			} else {
+				// Otherwise, push the match result onto the tail stack
+				stackTail.Push(isMatch)
+			}
+		}
+		if *showMatches {
+			fmt.Printf("%v| %s\n", center(fmt.Sprintf("%v", isMatch), 10, " "), leftjust(line, 40, " "))
+		}
+	}
+
+}
+
+func MatchOnMatchMatcher(pattern string, negate bool, content string) {
+
+	matcher := match.MustCompile(pattern)
+	lines := strings.Split(content, "\n")
+
+	if *showMatches {
+		fmt.Printf("%s| %s\n", center("Match?", 10, " "), leftjust("Text", 40, " "))
+		fmt.Println(strings.Repeat("-", 60))
+	}
+
+	var isMatchString string
+	for _, line := range lines {
+		isMatch := matcher.MatchString(line)
+		if negate {
+			isMatch = !isMatch
+		}
+		if stackHead.Len() == 0 {
+			stackHead.Push(isMatch)
+			totalMinMatches++
+		} else {
+			// Check if the item to be pushed is the same as what's in the current head stack
+			// If so, then restet both stacks
+			if isMatch == stackHead.Peek().(bool) {
+				totalMinMatches++
+				stackHead.Reset()
+				stackHead.Push(isMatch)
+				stackTail.Reset()
+			} else {
+				// Otherwise, push the match result onto the tail stack
+				stackTail.Push(isMatch)
+			}
+		}
+
+		if isMatch {
+			isMatchString = "true"
+		} else {
+			isMatchString = "false"
+		}
+
+		if *showMatches {
+			fmt.Printf("%v| %s\n", center(isMatchString, 10, " "), leftjust(line, 40, " "))
+		}
+	}
+
 }
 
 func loadYamlConfig(filname string) (*FilebeatConfig, error) {

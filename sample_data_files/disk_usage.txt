@@ -1,0 +1,33 @@
+Tape library space for drives: 500-51F
+Path                Size     Active      Scratch / Qty       Free    Filesystem
+----------------    ----   ---------   ----------------   ---------  ----------
+/path      393.7G      0   0%      0   0%      0  361.4G 91%  /dev/sda2
+/path/to
+                    7.9T    3.4T 42%      1T 12%    488    3.5T 44%  name-alias0:/path/to (Repl)
+/path/to
+                    7.9T    3.5T 44%    1.2T 15%    584    3.1T 39%  name-alias2:/path/to (Repl)
+/path/to
+                    7.9T    3.5T 43%    1.2T 14%    588    3.3T 41%  name-alias1:/path/to (Repl)
+/path/to
+                    7.9T    3.7T 46%    1.3T 15%    593      3T 37%  name-alias3:/path/to (Repl)
+/path/to
+                    7.9T    3.7T 47%    1.2T 15%    598    2.9T 37%  name-alias2:/path/to (Repl)
+/path/to
+                    7.9T    3.7T 47%    1.1T 14%    571      3T 38%  name-alias0:/path/to (Repl)
+/path/to
+                    7.9T    3.5T 44%      1T 13%    523    3.3T 42%  name-alias3:/path/to (Repl)
+/path/to
+                    7.9T    3.8T 48%    1.2T 15%    590    2.9T 36%  name-alias1:/path/to (Repl)
+/path/to
+                    7.9T    3.5T 44%    1.2T 14%    570    3.2T 41%  name-alias0:/path/to (Repl)
+/path/to
+                    7.9T    3.4T 42%    1.1T 13%    550    3.4T 43%  name-alias2:/path/to (Repl)
+/path/to
+                    7.9T    3.6T 45%    1.1T 14%    543    3.2T 40%  name-alias1:/path/to (Repl)
+/path/to
+                    7.9T    3.6T 45%    1.2T 15%    597    3.1T 38%  name-alias3:/path/to (Repl)
+/path/to
+                    7.9T    3.5T 44%    1.2T 15%    598    3.2T 40%  name-alias2:/path/to (Repl)
+                 ==================================================
+         Totals:  102.4T   46.3T 45%     15T 14%   7393   41.1T 40%
+----------------------------------------------------------------------

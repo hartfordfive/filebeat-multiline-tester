@@ -1,0 +1,33 @@
+Error: request entity too large
+    at readStream (/path/to/sub/directory/body-parser/node_modules/raw-body/app.js:196:17)
+    at getRawBody (/path/to/sub/directory/body-parser/node_modules/raw-body/app.js:106:12)
+    at read (/path/to/sub/directory/body-parser/lib/read.js:76:3)
+    at jsonParser (/path/to/sub/directory/body-parser/lib/types/json.js:121:5)
+    at Layer.handle [as handle_request] (/path/to/sub/directory/express/lib/router/layer.js:95:5)
+    at next (/path/to/sub/directory/express/lib/router/route.js:131:13)
+    at Route.dispatch (/path/to/sub/directory/express/lib/router/route.js:112:3)
+    at Layer.handle [as handle_request] (/path/to/sub/directory/express/lib/router/layer.js:95:5)
+    at /path/to/sub/directory/express/lib/router/app.js:277:22
+    at Function.process_params (/path/to/sub/directory/express/lib/router/app.js:330:12)
+Error: request entity too large
+    at readStream (/path/to/sub/directory/body-parser/node_modules/raw-body/app.js:196:17)
+    at getRawBody (/path/to/sub/directory/body-parser/node_modules/raw-body/app.js:106:12)
+    at read (/path/to/sub/directory/body-parser/lib/read.js:76:3)
+    at jsonParser (/path/to/sub/directory/body-parser/lib/types/json.js:121:5)
+    at Layer.handle [as handle_request] (/path/to/sub/directory/express/lib/router/layer.js:95:5)
+    at next (/path/to/sub/directory/express/lib/router/route.js:131:13)
+    at Route.dispatch (/path/to/sub/directory/express/lib/router/route.js:112:3)
+    at Layer.handle [as handle_request] (/path/to/sub/directory/express/lib/router/layer.js:95:5)
+    at /path/to/sub/directory/express/lib/router/app.js:277:22
+    at Function.process_params (/path/to/sub/directory/express/lib/router/app.js:330:12)
+Error: request entity too large
+    at readStream (/path/to/sub/directory/body-parser/node_modules/raw-body/app.js:196:17)
+    at getRawBody (/path/to/sub/directory/body-parser/node_modules/raw-body/app.js:106:12)
+    at read (/path/to/sub/directory/body-parser/lib/read.js:76:3)
+    at jsonParser (/path/to/sub/directory/body-parser/lib/types/json.js:121:5)
+    at Layer.handle [as handle_request] (/path/to/sub/directory/express/lib/router/layer.js:95:5)
+    at next (/path/to/sub/directory/express/lib/router/route.js:131:13)
+    at Route.dispatch (/path/to/sub/directory/express/lib/router/route.js:112:3)
+    at Layer.handle [as handle_request] (/path/to/sub/directory/express/lib/router/layer.js:95:5)
+    at /path/to/sub/directory/express/lib/router/app.js:277:22
+    at Function.process_params (/path/to/sub/directory/express/lib/router/app.js:330:12)

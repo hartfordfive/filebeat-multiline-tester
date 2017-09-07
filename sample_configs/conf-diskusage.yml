@@ -1,0 +1,14 @@
+--- 
+filebeat: 
+  prospectors: 
+    - 
+      fields: 
+        type: disk_stats
+      fields_under_root: true
+      ignore_older: 24h
+      multiline: 
+        match: after
+        negate: true
+        pattern: "^Tape library space for drives:"
+      paths: 
+        - sample_data_files/disk_usage.txt

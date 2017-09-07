@@ -1,0 +1,15 @@
+--- 
+filebeat: 
+  prospectors: 
+    - 
+      fields: 
+        category: general
+        type: elasticsearch
+      fields_under_root: true
+      ignore_older: 24h
+      multiline: 
+        match: after
+        negate: false
+        pattern: "^[[:space:]]"
+      paths: 
+        - sample_data_files/stacktrace.txt
